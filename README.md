@@ -8,11 +8,11 @@
 Sample web app to retrieve info about beers
 
 ### TODO
-[ ] Secure webapp
-[ ] Secure api keys
-[ ] Build some pagination
-[ ] Improve UI quality
-[ ] Test improvments
+[ ] Secure webapp  
+[ ] Secure api keys  
+[ ] Build some pagination  
+[ ] Improve UI quality  
+[ ] Test improvements  
 
 #### How to contribute
 1. Fork the project
