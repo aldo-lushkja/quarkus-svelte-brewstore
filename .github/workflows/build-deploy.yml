@@ -30,4 +30,12 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
+      - name: Check node and npm versions
       - run: npm -v
+      - run: node -v
+      - name: Install dependencies
+      - run: cd frontend
+      - run: npm install
+      - run: npm run build
+
+
