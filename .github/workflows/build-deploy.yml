@@ -32,7 +32,6 @@ jobs:
           node-version: '14'
       - name: Check node and npm versions
         run: npm -v && node -v
-      #        run: node -v
       - name: Install dependencies
         run: cd frontend && npm install
       - name: Build for production

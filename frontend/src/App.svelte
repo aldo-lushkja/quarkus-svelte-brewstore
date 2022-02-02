@@ -3,7 +3,7 @@
 	let isLoading = false;
 	let onError = false;
 	let beers = [];
-	const BEER_API = "https://api.punkapi.com/v2/beers?page=1&per_page=80";
+	const BEER_API = "http://localhost:12312/beers/search?page=1&per_page=80";
 	const getBeers = async () => {
 		const response = await fetch(BEER_API);
 
@@ -18,7 +18,6 @@
 		const json = await response.json();
 		beers = json;
 		console.log(beers);
-		return;
 	};
 
 	const handleSubmit = (e) => {
