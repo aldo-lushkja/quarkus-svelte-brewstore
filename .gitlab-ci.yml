@@ -7,7 +7,7 @@ run_backend_tests:
   before_script: 
     - apt-get update && apt-get install make -y
   script: 
-    - mvn clean install -f backend/pom.xml
+    - mvn clean test -f backend/pom.xml
 
 build_backend_docker_image:
   image: docker:20.10.16
@@ -17,7 +17,8 @@ build_backend_docker_image:
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
     - docker login -u $REGISTRY_USER -p $REGISTRY_PWD
-    - cd backend
+    - apt-get update && apt-get install maven -y && apt-get install default-jdk -y
+    - cd backend && mvn clean install -DskipTests
   script:
     - docker build -f src/main/docker/Dockerfile.jvm -t $BE_IMAGE_NAME:$BE_IMAGE_TAG .
     - docker push $BE_IMAGE_NAME:$BE_IMAGE_TAG
