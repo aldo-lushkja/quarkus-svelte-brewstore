@@ -33,6 +33,6 @@ services:
     networks:
       - application
 
-  networks:
-    application:
-      driver: bridge
+networks:
+  application:
+    driver: bridge
