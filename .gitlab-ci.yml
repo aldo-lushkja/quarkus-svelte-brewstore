@@ -4,10 +4,20 @@ variables:
 
 run_backend_tests:
   image: maven:3-amazoncorretto-11
-  before_script: 
-    - apt-get update && apt-get install make -y
   script: 
     - mvn clean test -f backend/pom.xml
+
+build_backend_artifacts:
+  image: maven:3-amazoncorretto-11
+  script:
+    - mvn package -DskipTests -f backend/pom.xml
+  artifacts:
+    paths:
+      - backend/target/quarkus-app/lib/
+      - backend/target/quarkus-app/*.jar
+      - backend/target/quarkus-app/app/
+      - backend/target/quarkus-app/quarkus/
+    expire_in: 1week
 
 build_backend_docker_image:
   image: docker:20.10.16
@@ -24,3 +34,5 @@ build_backend_docker_image:
     - docker push $BE_IMAGE_NAME:$BE_IMAGE_TAG
   after_script:
     - cd ..
+  dependencies:
+    - build_backend_artifacts
