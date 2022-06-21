@@ -1,0 +1,38 @@
+version: '2.1'
+services:
+  backend:
+    image: alushkja/brewstore-backend:0.0.1
+    container_name: brewstore-backend
+    restart: always
+    ports:
+      - 8089:8089
+    depends_on:
+      - cache-ispn
+    networks:
+      - application
+
+  frontend:
+    image: alushkja/brewstore-frontend:0.0.1
+    container_name: brewstore-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - 5000:80
+    networks:
+      - application
+
+  cache-ispn:
+    image: quay.io/infinispan/server:13.0
+    container_name: cache-ispn
+    environment:
+      USER: "admin"
+      PASSWORD: "password"
+    ports:
+      - 11222:11222
+    networks:
+      - application
+
+  networks:
+    application:
+      driver: bridge
