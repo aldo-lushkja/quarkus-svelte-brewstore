@@ -2,6 +2,8 @@ variables:
   BE_IMAGE_NAME: alushkja/brewstore-backend
   BE_IMAGE_NAME_NATIVE: alushkja/brewstore-backend-native
   BE_IMAGE_TAG: 0.0.1
+  FE_IMAGE_NAME: alushkja/brewstore-frontend
+  FE_IMAGE_TAG: 0.0.1
 
 stages:
   - test
@@ -10,7 +12,7 @@ stages:
   - deploy
 
 
-run_backend_tests:
+run_tests:
   stage: test
   image: maven:3-amazoncorretto-11
   script: 
@@ -19,7 +21,7 @@ run_backend_tests:
     paths:
       - .m2/repository/
 
-package_backend_jvm_artifact:
+build_java_artifacts:
   stage: package
   image: maven:3-amazoncorretto-11
   script:
@@ -35,6 +37,22 @@ package_backend_jvm_artifact:
     paths:
       - .m2/repository/
 
+build_frontend:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PWD
+    - cd frontend
+  script:
+    - docker build -t $FE_IMAGE_NAME:$FE_IMAGE_TAG .
+    - docker push $FE_IMAGE_NAME:$FE_IMAGE_TAG
+  after_script:
+    - cd ..
+
 #package_backend_native_artifact:
 #  stage: package
 #  image: vegardit/graalvm-maven:release
@@ -45,7 +63,7 @@ package_backend_jvm_artifact:
 #      - backend/target/*-runner
 #    expire_in: 30minute
 
-build_backend_jvm_docker_image:
+build_backend:
   stage: build
   image: docker:20.10.16
   services:
@@ -81,7 +99,7 @@ build_backend_jvm_docker_image:
 #  dependencies:
 #    - package_backend_native_artifact
 
-deploy_jvm_vps:
+deploy_to_vps:
   stage: deploy
   before_script:
     - chmod 400 $SSH_KEY
@@ -89,5 +107,7 @@ deploy_jvm_vps:
     - ssh -o StrictHostKeyChecking=no -i $SSH_KEY gitlab@$VPS_IP "
       docker login -u $REGISTRY_USER -p $REGISTRY_PWD &&  
       docker rm -f brewstore-backend &&
-      docker run -d --name brewstore-backend -p 8089:8089 $BE_IMAGE_NAME:$BE_IMAGE_TAG
+      docker run -d --name brewstore-backend -p 8089:8089 $BE_IMAGE_NAME:$BE_IMAGE_TAG &&
+      docker rm -f brewstore-frontend &&
+      docker run -d --name brewstore-frontend -p 5000:5000 $FE_IMAGE_NAME:$FE_IMAGE_TAG
       "
