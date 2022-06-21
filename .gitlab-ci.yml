@@ -15,6 +15,9 @@ run_backend_tests:
   image: maven:3-amazoncorretto-11
   script: 
     - mvn clean test -f backend/pom.xml
+  cache:
+    paths:
+      - .m2/repository/
 
 package_backend_jvm_artifact:
   stage: package
@@ -28,6 +31,9 @@ package_backend_jvm_artifact:
       - backend/target/quarkus-app/app/
       - backend/target/quarkus-app/quarkus/
     expire_in: 30minute
+  cache:
+    paths:
+      - .m2/repository/
 
 #package_backend_native_artifact:
 #  stage: package
@@ -82,6 +88,6 @@ deploy_jvm_vps:
   script:
     - ssh -o StrictHostKeyChecking=no -i $SSH_KEY gitlab@$VPS_IP "
       docker login -u $REGISTRY_USER -p $REGISTRY_PWD &&  
-      docker rm -f brewstore-backend
+      docker rm -f brewstore-backend &&
       docker run -d --name brewstore-backend -p 8089:8089 $BE_IMAGE_NAME:$BE_IMAGE_TAG
       "
