@@ -1,5 +1,6 @@
 variables:
   BE_IMAGE_NAME: alushkja/brewstore-backend
+  BE_IMAGE_NAME_NATIVE: alushkja/brewstore-backend-native
   BE_IMAGE_TAG: 0.0.1
 
 stages:
@@ -35,10 +36,10 @@ package_backend_native_artifact:
     - mvn package -DskipTests -f backend/pom.xml -Pnative
   artifacts:
     paths:
-      - backend/target/quarkus-app/*-runner
+      - backend/target/*-runner
     expire_in: 30minute
 
-build_backend_docker_image:
+build_backend_jvm_docker_image:
   stage: build
   image: docker:20.10.16
   services:
@@ -55,3 +56,21 @@ build_backend_docker_image:
     - cd ..
   dependencies:
     - package_backend_jvm_artifact
+
+build_backend_native_docker_image:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PWD
+    - cd backend
+  script:
+    - docker build -f src/main/docker/Dockerfile.native -t $BE_IMAGE_NAME_NATIVE:$BE_IMAGE_TAG .
+    - docker push $BE_IMAGE_NAME_NATIVE:$BE_IMAGE_TAG
+  after_script:
+    - cd ..
+  dependencies:
+    - package_backend_native_artifact
