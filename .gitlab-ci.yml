@@ -32,6 +32,7 @@ build_java_artifacts:
       - backend/target/quarkus-app/*.jar
       - backend/target/quarkus-app/app/
       - backend/target/quarkus-app/quarkus/
+      - docker-compose.yml
     expire_in: 30minute
   cache:
     paths:
@@ -107,3 +108,5 @@ deploy_to_vps:
     - ssh -o StrictHostKeyChecking=no -i $SSH_KEY gitlab@$VPS_IP "
       docker-compose -f docker-compose.yml up -d
       "
+  dependencies:
+    - build_java_artifacts
