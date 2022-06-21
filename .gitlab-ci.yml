@@ -79,7 +79,7 @@ build_backend:
   after_script:
     - cd ..
   dependencies:
-    - package_backend_jvm_artifact
+    - build_java_artifacts
 
 #build_backend_native_docker_image:
 #  stage: build
