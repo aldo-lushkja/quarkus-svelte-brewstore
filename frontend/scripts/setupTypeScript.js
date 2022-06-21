@@ -1,3 +1,7 @@
+
+
+
+
 // @ts-check
 
 /** This script modifies the project to support TS code in .svelte files like:

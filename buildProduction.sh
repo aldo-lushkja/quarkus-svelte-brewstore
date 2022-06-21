@@ -1,5 +1,5 @@
 # Build frontend
-cd frontend
+cd frontend || exit
 npm install
 npm audit fix
 npm run build

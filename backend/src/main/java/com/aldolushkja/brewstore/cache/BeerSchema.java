@@ -1,4 +1,4 @@
-package com.aldolushkja.brewstore.infinispan;
+package com.aldolushkja.brewstore.cache;
 
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;

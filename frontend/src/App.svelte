@@ -3,10 +3,17 @@
 	let isLoading = false;
 	let onError = false;
 	let beers = [];
-	const BEER_API = "http://localhost:12312/beers/search?page=1&per_page=80";
-	const getBeers = async () => {
-		const response = await fetch(BEER_API);
+	let executionTime;
 
+	const getBeers = async () => {
+		const BEER_API = `http://localhost:8089/beers/search-by-name/${search}/?page=1&per_page=80`;
+		console.log(BEER_API)
+		const startTime = performance.now();
+
+		const response = await fetch(BEER_API);
+		console.log('Searching for ' + search)
+
+		executionTime =  (performance.now() - startTime) / 1000
 		if (response.status !== 200) {
 			isLoading = false;
 			onError = true;
@@ -15,40 +22,42 @@
 			);
 			return;
 		}
-		const json = await response.json();
-		beers = json;
-		console.log(beers);
+		beers = await response.json();
+		console.debug(beers);
 	};
 
-	const handleSubmit = (e) => {
-		e.preventDefault();
+	const handleClick = (e) => {
 		isLoading = true;
 		getBeers();
 		isLoading = false;
 	};
 </script>
 
-<div class="container is-fluid block box">
-	<form on:submit={handleSubmit}>
-		<h1 class="is-size-3">Beers API 🍺🥃🍻</h1>
+<div class="container is-fluid is-flex box">
+		<h1 class="is-size-3 ml-2">🍺🥃🍻 BrewStore 🍺🥃🍻</h1>
+	<div class="control">
 		<input
-			type="text"
-			name="search"
-			bind:value={search}
-			placeholder="Search a beer..."
+				type="text"
+				name="search"
+				bind:value={search}
+				class="input is-primary is-rounded is-medium is-loading ml-2"
+				style="width: 20rem"
+				placeholder="Search a beer..."
 		/>
-		<button type="submit" class="button is-primary is-rounded"
-			>Search</button
+	</div>
+		<button on:click={handleClick} class="button is-primary is-rounded ml-2 mt-1"
+			>Cheers</button
 		>
-	</form>
 </div>
 
 <div class="container is-fluid columns is-variable is-multiline">
+	{#if executionTime}<div class="column is-full"><h2 class="is-size-6 ">Circa {beers.length} risultati  ({executionTime} secondi)</h2></div>{/if}
+
 	{#each beers as beer}
 		<div class="column is-one-quarter">
 			<div class="card ">
 				<div class="card-image">
-					<figure class="image is-square">
+					<figure class="image is-square ">
 						<img src={beer.image_url} alt="Placeholder image" />
 					</figure>
 				</div>
@@ -56,7 +65,7 @@
 					<div class="media">
 						<div class="media-content">
 							<p class="title is-4">{beer.name}</p>
-							<p class="subtitle is-6">{beer.description}</p>
+							<p class="subtitle is-6">{#if beer.description.length > 200} {beer.description.substring(200)}... {:else} {beer.description}  {/if}</p>
 						</div>
 					</div>
 

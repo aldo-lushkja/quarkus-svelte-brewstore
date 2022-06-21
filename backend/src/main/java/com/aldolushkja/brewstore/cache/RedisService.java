@@ -1,4 +1,4 @@
-package com.aldolushkja.brewstore.redis;
+package com.aldolushkja.brewstore.cache;
 
 import io.quarkus.redis.client.RedisClient;
 
