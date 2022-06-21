@@ -1,0 +1,6 @@
+run_backend_tests:
+  image: maven:3-amazoncorretto-11
+  before_script: 
+    - apt-get update && apt-get install make -y
+  script: 
+    - mvn test -f backend/pom.xml
