@@ -34,9 +34,8 @@ build_java_artifacts:
       - backend/target/quarkus-app/quarkus/
       - docker-compose.yml
     expire_in: 30minute
-  cache:
-    paths:
-      - .m2/repository/
+  dependencies:
+    - run_tests
 
 build_frontend:
   stage: build
@@ -107,6 +106,7 @@ deploy_to_vps:
     - scp -o "StrictHostKeyChecking=no" -i $SSH_KEY docker-compose.yml gitlab@$VPS_IP:/home/gitlab/brewstore
   script:
     - ssh -o StrictHostKeyChecking=no -i $SSH_KEY gitlab@$VPS_IP "
+      docker-compose -f brewstore/docker-compose.yml kill &&
       docker-compose -f brewstore/docker-compose.yml up -d
       "
   dependencies:
