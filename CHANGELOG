@@ -1,0 +1,9 @@
+[0.0.1-SNAPSHOT] - 21-06-2022
+Added
+- More rest endpoints to deal with PunkAPI Service
+Changed
+- How to work with caches
+- Package refactoring
+Fixed
+- Fix some tests
+
