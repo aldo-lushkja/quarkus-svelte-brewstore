@@ -28,7 +28,7 @@ services:
     container_name: cache-ispn
     environment:
       USER: "admin"
-      PASSWORD: "password"
+      PASS: "password"
     ports:
       - "11222:11222"
     networks:
