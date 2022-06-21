@@ -7,7 +7,7 @@ run_backend_tests:
   before_script: 
     - apt-get update && apt-get install make -y
   script: 
-    - mvn test -f backend/pom.xml
+    - mvn clean install -f backend/pom.xml
 
 build_backend_docker_image:
   image: docker:20.10.16
