@@ -2,12 +2,20 @@ variables:
   BE_IMAGE_NAME: alushkja/brewstore-backend
   BE_IMAGE_TAG: 0.0.1
 
+stages:
+  - test
+  - build
+  - deploy
+
+
 run_backend_tests:
+  stage: test
   image: maven:3-amazoncorretto-11
   script: 
     - mvn clean test -f backend/pom.xml
 
 build_backend_artifacts:
+  stage: build
   image: maven:3-amazoncorretto-11
   script:
     - mvn package -DskipTests -f backend/pom.xml
@@ -17,9 +25,10 @@ build_backend_artifacts:
       - backend/target/quarkus-app/*.jar
       - backend/target/quarkus-app/app/
       - backend/target/quarkus-app/quarkus/
-    expire_in: 1week
+    expire_in: 30minute
 
 build_backend_docker_image:
+  stage: build
   image: docker:20.10.16
   services:
     - docker:20.10.16-dind
@@ -27,8 +36,7 @@ build_backend_docker_image:
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
     - docker login -u $REGISTRY_USER -p $REGISTRY_PWD
-    - apt-get update && apt-get install maven -y && apt-get install default-jdk -y
-    - cd backend && mvn clean install -DskipTests
+    - cd backend
   script:
     - docker build -f src/main/docker/Dockerfile.jvm -t $BE_IMAGE_NAME:$BE_IMAGE_TAG .
     - docker push $BE_IMAGE_NAME:$BE_IMAGE_TAG
