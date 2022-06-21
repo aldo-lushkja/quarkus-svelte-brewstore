@@ -4,6 +4,7 @@ variables:
 
 stages:
   - test
+  - package
   - build
   - deploy
 
@@ -14,8 +15,8 @@ run_backend_tests:
   script: 
     - mvn clean test -f backend/pom.xml
 
-build_backend_artifacts:
-  stage: build
+package_backend_jvm_artifact:
+  stage: package
   image: maven:3-amazoncorretto-11
   script:
     - mvn package -DskipTests -f backend/pom.xml
@@ -25,6 +26,16 @@ build_backend_artifacts:
       - backend/target/quarkus-app/*.jar
       - backend/target/quarkus-app/app/
       - backend/target/quarkus-app/quarkus/
+    expire_in: 30minute
+
+package_backend_native_artifact:
+  stage: package
+  image: vegardit/graalvm-maven:release
+  script:
+    - mvn package -DskipTests -f backend/pom.xml -Pnative
+  artifacts:
+    paths:
+      - backend/target/quarkus-app/*-runner
     expire_in: 30minute
 
 build_backend_docker_image:
@@ -43,4 +54,4 @@ build_backend_docker_image:
   after_script:
     - cd ..
   dependencies:
-    - build_backend_artifacts
+    - package_backend_jvm_artifact
