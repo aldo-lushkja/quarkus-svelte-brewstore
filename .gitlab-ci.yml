@@ -104,7 +104,7 @@ deploy_to_vps:
   stage: deploy
   before_script:
     - chmod 400 $SSH_KEY
-    - scp -i $SSH_KEY docker-compose.yml gitlab@$VPS_IP:/home/gitlab/brewstore
+    - scp -o "StrictHostKeyChecking=no" -i $SSH_KEY docker-compose.yml gitlab@$VPS_IP:/home/gitlab/brewstore
   script:
     - ssh -o StrictHostKeyChecking=no -i $SSH_KEY gitlab@$VPS_IP "
       docker-compose -f brewstore/docker-compose.yml up -d
