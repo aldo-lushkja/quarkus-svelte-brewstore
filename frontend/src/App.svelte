@@ -7,11 +7,12 @@
 
 	const getBeers = async () => {
 		const BEER_API = `http://brewstore-backend:8089/beers/search-by-name/${search}/?page=1&per_page=80`;
-		console.log(BEER_API)
+		console.log('Fetching from url: ' + BEER_API)
+		console.log('Using search text: ' + search)
+
 		const startTime = performance.now();
 
 		const response = await fetch(BEER_API);
-		console.log('Searching for ' + search)
 
 		executionTime =  (performance.now() - startTime) / 1000
 		if (response.status !== 200) {
@@ -46,7 +47,7 @@
 		/>
 	</div>
 		<button on:click={handleClick} class="button is-primary is-rounded ml-2 mt-1"
-			>Cheers</button
+			>Search</button
 		>
 </div>
 
@@ -69,7 +70,7 @@
 						</div>
 					</div>
 
-					<div class="content" />
+					<div class="content"></div>
 				</div>
 			</div>
 		</div>
