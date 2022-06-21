@@ -6,7 +6,7 @@
 	let executionTime;
 
 	const getBeers = async () => {
-		const BEER_API = `http://localhost:8089/beers/search-by-name/${search}/?page=1&per_page=80`;
+		const BEER_API = `http://brewstore-backend:8089/beers/search-by-name/${search}/?page=1&per_page=80`;
 		console.log(BEER_API)
 		const startTime = performance.now();
 
