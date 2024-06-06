@@ -22,16 +22,16 @@ public class RedisService {
     @Inject
     Logger logger;
 
-    public void addItem(String key, RedisBeerEntry redisBeerEntry) throws JsonProcessingException {
-        redisClient.set(Arrays.asList(key,objectMapper.writeValueAsString(redisBeerEntry)));
+    public void addItem(String key, CacheEntry cacheEntry) throws JsonProcessingException {
+        redisClient.set(Arrays.asList(key,objectMapper.writeValueAsString(cacheEntry)));
     }
 
-    public RedisBeerEntry getItem(String key) throws JsonProcessingException {
+    public CacheEntry getItem(String key) throws JsonProcessingException {
         Response response = redisClient.get(key);
         if(response == null) {
             logger.warn("Key not found in cache");
             return null;
         }
-        return objectMapper.readValue(response.toString(), RedisBeerEntry.class);
+        return objectMapper.readValue(response.toString(), CacheEntry.class);
     }
 }

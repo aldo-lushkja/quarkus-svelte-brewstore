@@ -1,14 +1,10 @@
 package com.aldolushkja.brewstore.controller;
 
-import com.aldolushkja.brewstore.cache.RedisBeerEntry;
-import com.aldolushkja.brewstore.event.CacheEvent;
-import com.aldolushkja.brewstore.cache.BeerCacheEntry;
-import com.aldolushkja.brewstore.cache.BeerSchema;
+import com.aldolushkja.brewstore.cache.CacheEntry;
 import com.aldolushkja.brewstore.cache.RedisService;
+import com.aldolushkja.brewstore.event.CacheEvent;
 import com.aldolushkja.brewstore.service.BeerService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.quarkus.infinispan.client.Remote;
-import org.infinispan.client.hotrod.RemoteCache;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.event.Event;
@@ -22,7 +18,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.HashSet;
 
 @Path("/beers")
 public class BeersController {
@@ -37,10 +32,6 @@ public class BeersController {
     RedisService redisService;
 
     @Inject
-    @Remote("beers-punk-api")
-    RemoteCache<String, BeerCacheEntry> cache;
-
-    @Inject
     Event<CacheEvent> cacheEvents;
 
     @GET
@@ -48,21 +39,21 @@ public class BeersController {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBeer(@PathParam ("name") String name,
                             @QueryParam("page") int page,
-                            @QueryParam("per_page") int rows) {
+                            @QueryParam("per_page") int rows) throws JsonProcessingException {
         return Response.ok(beerService.getBeersByName(name,page, rows)).build();
     }
 
     @GET
     @Path("/search")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getBeer(@QueryParam("page") int page, @QueryParam("per_page") int rows) {
+    public Response getBeer(@QueryParam("page") int page, @QueryParam("per_page") int rows) throws JsonProcessingException {
         return Response.ok(beerService.fetchIpaBeers(page, rows)).build();
     }
 
     @GET
     @Path("/random")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getRandom() {
+    public Response getRandom() throws JsonProcessingException {
         return Response.ok(beerService.getRandom()).build();
     }
 
@@ -73,7 +64,7 @@ public class BeersController {
     public Response testApi() throws JsonProcessingException {
         final var beers = beerService.fetchIpaBeers(1,10);
         var start = System.currentTimeMillis();
-        RedisBeerEntry cacheEntry = null;
+        CacheEntry cacheEntry = null;
         try {
             cacheEntry = redisService.getItem("test");
         } catch (JsonProcessingException e) {
@@ -97,7 +88,7 @@ public class BeersController {
         // add 2 minutes to the current time
         final var expirationDate = new Date(System.currentTimeMillis() + 120000);
         logger.info("Adding key to redis with expiration date: " + expirationDate);
-        RedisBeerEntry cacheEntry = new RedisBeerEntry(beers, expirationDate);
+        CacheEntry cacheEntry = new CacheEntry(beers, expirationDate);
         redisService.addItem("test", cacheEntry);
         logger.info("Added key to redis.");
         cacheEvents.fireAsync(new CacheEvent("REDIS","INSERT", LocalDateTime.now(),"OK"));

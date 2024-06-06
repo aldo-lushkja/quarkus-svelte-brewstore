@@ -9,29 +9,29 @@ import javax.inject.Inject;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
-class PunkApiServiceTest {
+class RemoteBeerApiServiceTest {
 
     @Inject
     @RestClient
-    PunkApiService punkApiService;
+    RemoteBeerApiService remoteBeerApiService;
 
     @Test
     void getBeersWithNameAndPageAndPerPageFilters() {
-        final var beers = punkApiService.getBeersByNameWithPagination();
+        final var beers = remoteBeerApiService.getBeersByNameWithPagination();
         System.out.println(beers);
         assertNotNull(beers);
     }
 
     @Test
     void getRandom() {
-        final var beers = punkApiService.getRandom();
+        final var beers = remoteBeerApiService.getRandom();
         System.out.println(beers);
         assertNotNull(beers);
     }
 
     @Test
     void getBeersContainingFood() {
-        final var beers = punkApiService.getBeersContainingFood("meat");
+        final var beers = remoteBeerApiService.getBeersContainingFood("meat");
         System.out.println(beers);
         assertNotNull(beers);
     }

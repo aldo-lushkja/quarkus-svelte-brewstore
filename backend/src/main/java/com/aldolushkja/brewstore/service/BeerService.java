@@ -1,55 +1,50 @@
 package com.aldolushkja.brewstore.service;
 
-import com.aldolushkja.brewstore.client.PunkApiService;
+import com.aldolushkja.brewstore.client.RemoteBeerApiService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 @ApplicationScoped
 public class BeerService {
 
     @Inject
     @RestClient
-    PunkApiService punkApiService;
+    RemoteBeerApiService remoteBeerApiService;
 
     @Inject
     Logger logger;
 
-    Jsonb builder;
+    @Inject
+    ObjectMapper objectMapper;
 
-    @PostConstruct
-    public void init() {
-        builder = JsonbBuilder.newBuilder().build();
-    }
-
-    public String getBeersByName(String name, int page, int perPage) {
+    public String getBeersByName(String name, int page, int perPage) throws JsonProcessingException {
         logger.info("Fetching beers from punk api");
-        var response = punkApiService.getBeersByNameWithPagination();
+        var response = remoteBeerApiService.getBeersByNameWithPagination();
         if (response != null) {
-            return builder.toJson(response);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
         } else {
             return "";
         }
     }
-    public String fetchIpaBeers(int page, int perPage) {
+    public String fetchIpaBeers(int page, int perPage) throws JsonProcessingException {
         logger.info("Fetching beers from punk api");
-        var response = punkApiService.getBeersByNameWithPagination();
+        var response = remoteBeerApiService.getBeersByNameWithPagination();
         if (response != null) {
-            return builder.toJson(response);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
         } else {
             return "";
         }
     }
 
-    public String getRandom(){
-        final var random = punkApiService.getRandom();
+    public String getRandom() throws JsonProcessingException {
+        final var random = remoteBeerApiService.getRandom();
         if(random != null){
-            return builder.toJson(random);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(random);
         } else {
             return "";
         }

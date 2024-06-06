@@ -1,26 +1,25 @@
 package com.aldolushkja.brewstore.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import javax.json.JsonArray;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
 @Path("/breweries")
 @RegisterRestClient(configKey = "punk-api")
-public interface PunkApiService {
+public interface RemoteBeerApiService {
 
     @GET
-    JsonArray getBeersByNameWithPagination();
+    JsonNode getBeersByNameWithPagination();
 
     @GET
     @Path("/random")
-    JsonArray getRandom();
+    JsonNode getRandom();
 
     @GET
-    JsonArray getBeersContainingFood(@QueryParam("name") String name);
+    JsonNode getBeersContainingFood(@QueryParam("name") String name);
 
 }
 
