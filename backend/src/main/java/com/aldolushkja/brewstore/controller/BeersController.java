@@ -1,12 +1,15 @@
 package com.aldolushkja.brewstore.controller;
 
+import com.aldolushkja.brewstore.cache.RedisBeerEntry;
 import com.aldolushkja.brewstore.event.CacheEvent;
 import com.aldolushkja.brewstore.cache.BeerCacheEntry;
 import com.aldolushkja.brewstore.cache.BeerSchema;
 import com.aldolushkja.brewstore.cache.RedisService;
 import com.aldolushkja.brewstore.service.BeerService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.quarkus.infinispan.client.Remote;
 import org.infinispan.client.hotrod.RemoteCache;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
@@ -18,10 +21,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 
 @Path("/beers")
 public class BeersController {
+
+    @Inject
+    Logger logger;
 
     @Inject
     BeerService beerService;
@@ -63,23 +70,38 @@ public class BeersController {
     @Path("/test")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response testApi() {
+    public Response testApi() throws JsonProcessingException {
         final var beers = beerService.fetchIpaBeers(1,10);
+        var start = System.currentTimeMillis();
+        RedisBeerEntry cacheEntry = null;
+        try {
+            cacheEntry = redisService.getItem("test");
+        } catch (JsonProcessingException e) {
+            logger.error("Error while fetching key from redis: " + e.getMessage());
+        }
+        if(cacheEntry != null && new Date().before(cacheEntry.getExpirationDate())){
+            logger.info("Cache entry found in cache");
+            cacheEvents.fireAsync(new CacheEvent("REDIS","HIT", LocalDateTime.now(),"OK"));
+            logger.info("Fired cache event.");
+            var end = System.currentTimeMillis();
+            logger.info("Time taken to fetch from cache: " + (end - start) + "ms");
+            return Response.ok(cacheEntry.getData()).build();
+        }
         addToRedis(beers);
-        addToInfinispanCache();
+        var end = System.currentTimeMillis();
+        logger.info("Time taken to fetch from api: " + (end - start) + "ms");
         return Response.ok(beers).build();
     }
 
-    private void addToRedis(String beers) {
-        redisService.addItem("test", beers);
+    private void addToRedis(String beers) throws JsonProcessingException {
+        // add 2 minutes to the current time
+        final var expirationDate = new Date(System.currentTimeMillis() + 120000);
+        logger.info("Adding key to redis with expiration date: " + expirationDate);
+        RedisBeerEntry cacheEntry = new RedisBeerEntry(beers, expirationDate);
+        redisService.addItem("test", cacheEntry);
+        logger.info("Added key to redis.");
         cacheEvents.fireAsync(new CacheEvent("REDIS","INSERT", LocalDateTime.now(),"OK"));
-    }
-
-    private void addToInfinispanCache() {
-        final var objects = new HashSet<BeerSchema>();
-        objects.add(new BeerSchema("","",""));
-        cache.put("test", new BeerCacheEntry(objects));
-        cacheEvents.fireAsync(new CacheEvent("ISPN","INSERT", LocalDateTime.now(),"OK"));
+        logger.info("Fired cache event.");
     }
 
 

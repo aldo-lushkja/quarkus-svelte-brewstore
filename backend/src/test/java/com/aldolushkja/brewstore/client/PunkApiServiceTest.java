@@ -17,7 +17,7 @@ class PunkApiServiceTest {
 
     @Test
     void getBeersWithNameAndPageAndPerPageFilters() {
-        final var beers = punkApiService.getBeersByNameWithPagination("ipa", 1, 10);
+        final var beers = punkApiService.getBeersByNameWithPagination();
         System.out.println(beers);
         assertNotNull(beers);
     }

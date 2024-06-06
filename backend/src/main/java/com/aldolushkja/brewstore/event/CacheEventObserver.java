@@ -1,13 +1,18 @@
 package com.aldolushkja.brewstore.event;
 
-import javax.enterprise.event.Observes;
-import java.util.logging.Logger;
+import org.jboss.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+
+@ApplicationScoped
 public class CacheEventObserver {
 
-    Logger logger = Logger.getLogger(CacheEventObserver.class.getName());
+    @Inject
+    Logger logger;
 
     public void observeIncomingCountEvent(@Observes CacheEvent cacheEvent) {
-        System.out.println("Received event: "+ cacheEvent);
+        logger.info("Received event: "+ cacheEvent);
     }
 }

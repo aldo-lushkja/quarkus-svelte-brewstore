@@ -8,15 +8,12 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
-@Path("/beers")
+@Path("/breweries")
 @RegisterRestClient(configKey = "punk-api")
 public interface PunkApiService {
 
     @GET
-    JsonArray getBeersByNameWithPagination(
-            @QueryParam(value = "beer_name") @DefaultValue("ipa") String name,
-            @QueryParam(value = "page") @DefaultValue("10") int page,
-            @QueryParam("per_page") @DefaultValue("10") int perPage);
+    JsonArray getBeersByNameWithPagination();
 
     @GET
     @Path("/random")

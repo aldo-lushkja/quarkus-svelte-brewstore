@@ -2,6 +2,7 @@ package com.aldolushkja.brewstore.service;
 
 import com.aldolushkja.brewstore.client.PunkApiService;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -16,6 +17,9 @@ public class BeerService {
     @RestClient
     PunkApiService punkApiService;
 
+    @Inject
+    Logger logger;
+
     Jsonb builder;
 
     @PostConstruct
@@ -24,7 +28,8 @@ public class BeerService {
     }
 
     public String getBeersByName(String name, int page, int perPage) {
-        var response = punkApiService.getBeersByNameWithPagination(name,page,perPage);
+        logger.info("Fetching beers from punk api");
+        var response = punkApiService.getBeersByNameWithPagination();
         if (response != null) {
             return builder.toJson(response);
         } else {
@@ -32,7 +37,8 @@ public class BeerService {
         }
     }
     public String fetchIpaBeers(int page, int perPage) {
-        var response = punkApiService.getBeersByNameWithPagination("ipa",page, perPage);
+        logger.info("Fetching beers from punk api");
+        var response = punkApiService.getBeersByNameWithPagination();
         if (response != null) {
             return builder.toJson(response);
         } else {
