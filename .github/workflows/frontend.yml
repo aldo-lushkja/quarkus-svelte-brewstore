@@ -1,4 +1,4 @@
-name: Frontend workflow
+name: frontend-workflow
 
 on:
   push:
