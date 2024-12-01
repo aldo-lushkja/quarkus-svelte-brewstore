@@ -1,7 +1,10 @@
+
 <script>
     import {onMount, onDestroy} from "svelte";
     import {writable, derived} from "svelte/store";
     import {_, locale} from "svelte-i18n";
+
+    import { API_URL } from "../config";
 
     let search = '';
     let isLoading = writable(false);
@@ -21,7 +24,7 @@
         return Array.isArray($beers) ? $beers : [];
     });
 
-    const searchBeers = (searchTerm) => {
+    const searchBrewery = (searchTerm) => {
         // Clear any existing timer
         if (debounceTimer) clearTimeout(debounceTimer);
 
@@ -32,18 +35,29 @@
         }
 
         isLoading.set(true);
+        const API = `${API_URL}/breweries/search`;
 
+        console.log('Fetching from url: ' + API);
         // Set a new debounce timer
         debounceTimer = setTimeout(() => {
             onError.set(false);
-
-            const BEER_API = `http://localhost:8089/beers/search-by-name/${searchTerm}/?page=1&per_page=10`;
-            console.log('Fetching from url: ' + BEER_API);
+            console.log('Fetching from url: ' + API);
             console.log('Using search text: ' + searchTerm);
 
             const startTime = performance.now();
 
-            fetch(BEER_API)
+            const payload = {
+                name: searchTerm,
+                page: 1,
+                per_page: 10,
+            };
+            fetch(API, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -61,7 +75,10 @@
                 })
                 .catch(error => {
                     console.error("Error fetching beers:", error);
+                    isLoading.set(false);
                     onError.set(true);
+                })
+                .finally(() => {
                     isLoading.set(false);
                 });
         }, 1000); // 500ms delay
@@ -82,13 +99,13 @@
 
 
     const handleClick = () => {
-        searchBeers(search);
+        searchBrewery(search);
     };
 </script>
 
 <main>
     <div class="container is-fluid has-text-centered">
-        <h1 class="title is-2">🌟 Brewery Hall</h1>
+        <h1 class="title is-2 is-centered">Brewery Hall</h1>
         <div class="field has-addons is-centered" style="width: 300px; margin: 0 auto;">
             <div class="control is-expanded has-addons-centered">
                 <input
@@ -142,29 +159,29 @@
             {/each}
         </div>
     {/if}
+    {#if $onError}
+        <div class="container is-fluid is-center">
+            <img
+                    class="image is-128x128 is-center"
+                    alt="error occurred"
+                    src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F2.bp.blogspot.com%2F-CPO_z4zNSnc%2FWsY667p0JgI%2FAAAAAAAAYRs%2FubTMJD5ToyImbR-o4EiK18gBypYXd0RiwCLcBGAs%2Fs1600%2FMercenary%252BGarage%252BError%252BGIF.gif&f=1&nofb=1"
+                    width="300"
+            />
+        </div>
+    {/if}
 
+    {#if $isLoading}
+        <div id="loading" class="is-centered">
+            <img
+                    alt="is loading"
+                    src="https://cdn.dribbble.com/users/278870/screenshots/1573076/preloader_gif.gif"
+                    width="150"
+            />
+        </div>
+    {/if}
 
 </main>
-{#if $onError}
-    <div class="container is-fluid">
-        <img
-                class="image is-128x128"
-                alt="error occurred"
-                src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F2.bp.blogspot.com%2F-CPO_z4zNSnc%2FWsY667p0JgI%2FAAAAAAAAYRs%2FubTMJD5ToyImbR-o4EiK18gBypYXd0RiwCLcBGAs%2Fs1600%2FMercenary%252BGarage%252BError%252BGIF.gif&f=1&nofb=1"
-                width="300"
-        />
-    </div>
-{/if}
 
-{#if $isLoading}
-    <div id="loading">
-        <img
-                alt="is loading"
-                src="https://cdn.dribbble.com/users/278870/screenshots/1573076/preloader_gif.gif"
-                width="100"
-        />
-    </div>
-{/if}
 
 <style>
     @import url("https://fonts.googleapis.com/css?family=Nunito:400,700");
