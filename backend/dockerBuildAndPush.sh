@@ -2,8 +2,8 @@
 
 REGISTRY=docker.io
 USERNAME=yourusername
-REPOSITORY=backend
-VERSION=latest
+PASSWORD=yourpassword
+REPOSITORY=brewstore-backend
 
 PUSH_REMOTE=false
 PUSH_LATEST=false
@@ -14,8 +14,10 @@ function display_help() {
   echo
   echo "   -r <registry>    The docker registry to push the image to (default: docker.io)"
   echo "   -u <username>    The username to login to the docker registry (default: yourusername)"
-  echo "   -v <version>     The version of the image (default: latest)"
-  echo "   -p               Push the image to the registry (default: false)"
+  echo "   -p <password>    The password to login to the docker registry (default: yourpassword)"
+  echo "   -r <repository>  The repository name (default: backend)"
+  echo "   -v <version>     The version of the image (default: project version from pom.xml)"
+  echo "   -d               Push the image to the registry (default: false)"
   echo "   -l               Push the image with the latest tag to the registry (default: false)"
   echo "   -h               Display this help message"
   echo
@@ -25,27 +27,18 @@ function display_help() {
 }
 
 # Get the arguments
-while getopts 'r:u:v:p:l:h' flag; do
+while getopts 'r:u:v:p:d:l:h' flag; do
   case "${flag}" in
     r) REGISTRY="${OPTARG}" ;;
     u) USERNAME="${OPTARG}" ;;
     v) VERSION="${OPTARG}" ;;
-    p) PUSH_REMOTE=true ;;
+    p) PASSWORD="${OPTARG}" ;;
+    d) PUSH_REMOTE=true ;;
     l) PUSH_LATEST=true ;;
     h) display_help ;;
     *) error "Unexpected option ${flag}" ;;
   esac
 done
-
-# Print the arguments
-echo "----------------------------------------"
-echo "REGISTRY: $REGISTRY"
-echo "USERNAME: $USERNAME"
-echo "REPOSITORY: $REPOSITORY"
-echo "VERSION: $VERSION"
-echo "PUSH_REMOTE: $PUSH_REMOTE"
-echo "PUSH_LATEST: $PUSH_LATEST"
-echo "----------------------------------------"
 
 # Check if the docker command exists
 if ! [ -x "$(command -v docker)" ]; then
@@ -59,6 +52,27 @@ if ! [ -x "$(command -v mvn)" ]; then
   exit 1
 fi
 
+if [ -z "$VERSION" ]; then
+  echo "Using project version from pom.xml"
+  VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+fi
+
+# Print the arguments
+echo "----------------------------------------"
+echo "REGISTRY: $REGISTRY"
+echo "USERNAME: $USERNAME"
+if [ -z "$PASSWORD" ]; then
+  echo "PASSWORD: N/A"
+else
+  echo "PASSWORD: ********"
+fi
+echo "REPOSITORY: $REPOSITORY"
+echo "VERSION: $VERSION"
+echo "PUSH_REMOTE: $PUSH_REMOTE"
+echo "PUSH_LATEST: $PUSH_LATEST"
+echo "----------------------------------------"
+
+
 # Build project with maven
 echo "Building the project with maven"
 mvn clean package -DskipTests
@@ -70,26 +84,32 @@ fi
 
 echo "Building the docker image..."
 
-if [ -z "$USERNAME" ]; then
+if [[ -z "$USERNAME" || $USERNAME == "yourusername" ]]; then
   # Read the username from the user
   echo "Enter your username for $REGISTRY"
   read -r USERNAME
 fi
 
 # Get the password from the user
-echo "Enter your password for $REGISTRY"
-read -rs PASSWORD
-
+if [[ -z "$PASSWORD" || $PASSWORD == "yourpassword" ]]; then
+  echo "Enter your password for $REGISTRY"
+  read -rs PASSWORD
+fi
 
 # Define the image name
 
 IMAGE=$REGISTRY/$USERNAME/$REPOSITORY:$VERSION
 IMAGE_LATEST=$REGISTRY/$USERNAME/$REPOSITORY:latest
 
+echo "----------------------------------------"
+echo "IMAGE: $IMAGE"
+echo "IMAGE_LATEST: $IMAGE_LATEST"
+echo "----------------------------------------"
+
 # Login to the docker registry
 docker login $REGISTRY -u $USERNAME -p $PASSWORD
 
-if [ $? -ne 0 ]; then
+if [ $? -ne 0 ];then
   echo "Error: docker login failed"
   exit 1
 fi
@@ -110,8 +130,36 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# Check if docker image can run successfully
+# > /dev/null
+container_id=$(docker run -d --rm "$IMAGE")
+echo "Container ID: $container_id"
+
+# Check if the container is running using retry
+for i in {1..10}; do
+  echo "$i of 10 - Checking if the container is running..."
+  docker inspect -f '{{.State.Running}}' "$container_id"
+
+  if [ $? -eq 0 ]; then
+    break
+  fi
+
+  sleep 5
+done
+echo "Docker image is running successfully"
+
+# Stop the container
+docker rm -f "$container_id"
+if [ $? -ne 0 ]; then
+  echo "Error: docker run failed"
+  exit 1
+fi
+
+# Check if service is healthy with retry
+
+
 # Push the docker image
-if [ "$PUSH_REMOTE" = true ]; then
+if [ "$PUSH_REMOTE" == true ]; then
   docker push "$IMAGE"
 
   if [ $? -ne 0 ]; then
@@ -125,7 +173,12 @@ if [ "$PUSH_REMOTE" = true ]; then
     if [ $? -ne 0 ]; then
       echo "Error: docker push failed latest"
       exit 1
+    fi
+  else
+    echo "The image has not been pushed with the latest tag"
   fi
+else
+  echo "The image has not been pushed to the registry"
 fi
 
 echo "Docker image $IMAGE has been built and pushed successfully"

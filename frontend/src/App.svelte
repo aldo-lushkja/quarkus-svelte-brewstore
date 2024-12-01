@@ -112,12 +112,12 @@
                         type="text"
                         name="search"
                         bind:value={search}
-                        class="input is-primary is-rounded is-small"
+                        class="input is-primary  is-small"
                         placeholder="Cheer me up!"
                 />
             </div>
             <div class="control">
-                <button on:click={handleClick} class="button is-primary is-rounded is-small">
+                <button on:click={handleClick} class="button is-primary is-small">
                     Search
                 </button>
             </div>
@@ -160,12 +160,13 @@
         </div>
     {/if}
     {#if $onError}
-        <div class="container is-fluid is-center">
+        <div class="container is-fluid has-text-centered">
             <img
-                    class="image is-128x128 is-center"
+                    class="is-128x128 is-centered mt-2"
                     alt="error occurred"
                     src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F2.bp.blogspot.com%2F-CPO_z4zNSnc%2FWsY667p0JgI%2FAAAAAAAAYRs%2FubTMJD5ToyImbR-o4EiK18gBypYXd0RiwCLcBGAs%2Fs1600%2FMercenary%252BGarage%252BError%252BGIF.gif&f=1&nofb=1"
                     width="300"
+                    height="80"
             />
         </div>
     {/if}
