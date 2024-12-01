@@ -38,6 +38,9 @@ jobs:
       - name: Build backend wit Maven and JDK11
         run: mvn -B package --file backend/pom.xml -DskipTests --quiet
 
+      - name: Set executable permission for dockerBuildAndPush.sh
+        run: chmod +x backend/dockerBuildAndPush.sh
+
       - name: Build Docker image
         run: cd backend && ./dockerBuildAndPush.sh -u ${{ secrets.DOCKER_USERNAME }} -p "${{ secrets.DOCKER_PASSWORD }}" -d -l
 
