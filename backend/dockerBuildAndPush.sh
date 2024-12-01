@@ -27,7 +27,7 @@ function display_help() {
 }
 
 # Get the arguments
-while getopts 'r:u:v:p:d:l:h' flag; do
+while getopts 'r:u:v:p:dlh' flag; do
   case "${flag}" in
     r) REGISTRY="${OPTARG}" ;;
     u) USERNAME="${OPTARG}" ;;
