@@ -11,9 +11,9 @@ services:
     container_name: brewstore-frontend
     restart: always
     depends_on:
-      - backend
+      - brewstore-backend
     environment:
-      - APP_BACKEND_URL=http://brewstore-backend:8089
+      - API_URL=http://brewstore-backend:8089
     networks:
       - shared_network
     labels:
