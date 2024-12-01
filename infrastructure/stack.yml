@@ -1,0 +1,28 @@
+services:
+  brewstore-backend:
+    image: alushkja/brewstore-backend:1.0.0-SNAPSHOT
+    container_name: brewstore-backend
+    restart: always
+    networks:
+      - shared_network
+
+  brewstore-frontend:
+    image: alushkja/brewstore-frontend:1.0.0-SNAPSHOT
+    container_name: brewstore-frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      - APP_BACKEND_URL=http://brewstore-backend:8089
+    networks:
+      - shared_network
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.brewstore-fe.rule=Host(`contabo-1.lushkja.it`) || Host(`contabo-1.aldolushkja.it`) && PathPrefix(`/brewstore`)
+      - traefik.http.routers.brewstore-fe.entrypoints=websecure
+      - traefik.http.routers.brewstore-fe.tls=true
+      - traefik.http.routers.brewstore-fe.tls.certresolver=letsencrypt
+
+networks:
+  shared_network:
+    external: true

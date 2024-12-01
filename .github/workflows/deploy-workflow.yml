@@ -1,0 +1,40 @@
+name: Deploy workflow
+
+on:
+  workflow_run:
+    workflows: ["Backend workflow", "Frontend workflow"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add remote server to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy files to remote server
+        run: |
+          scp -rv infrastructure/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:${{ secrets.REMOTE_DIR }}/brewstore/
+
+      - name: Set execute permissions on bash scripts
+        run: |
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'chmod +x ${{ secrets.REMOTE_DIR }}/brewstore/*.sh'
+
+      - name: Execute STOP bash script on remote server
+        run: |
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'cd ${{ secrets.REMOTE_DIR }}/brewstore && ./stop.sh'
+
+      - name: Execute START bash script on remote server
+        run: |
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'cd ${{ secrets.REMOTE_DIR }}/brewstore && ./start.sh'

@@ -1,10 +1,8 @@
 
 <script>
-    import {onMount, onDestroy} from "svelte";
+    import {onDestroy} from "svelte";
     import {writable, derived} from "svelte/store";
-    import {_, locale} from "svelte-i18n";
-
-    import { API_URL } from "../config";
+    import { env } from '$env/dynamic/private';
 
     let search = '';
     let isLoading = writable(false);
@@ -35,7 +33,7 @@
         }
 
         isLoading.set(true);
-        const API = `${API_URL}/breweries/search`;
+        const API = `${env.API_URL}/breweries/search`;
 
         console.log('Fetching from url: ' + API);
         // Set a new debounce timer
@@ -140,7 +138,7 @@
                                 <div class="media-content has-text-centered">
                                     <p class="title is-4">{beer.name}</p>
                                     <p class="subtitle is-6">{beer.breweryType}</p>
-                                    <p>{beer.address1}</p>
+                                    <p class="is-text">{beer.address1}</p>
                                     <p>{beer.address2}</p>
                                     <p>{beer.address3}</p>
                                     <p>{beer.city}, {beer.stateProvince} {beer.postalCode}</p>

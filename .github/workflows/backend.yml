@@ -1,7 +1,4 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
-name: Java CI with Maven
+name: Backend worflow
 
 on:
   push:
@@ -43,22 +40,3 @@ jobs:
 
       - name: Build Docker image
         run: cd backend && ./dockerBuildAndPush.sh -u ${{ secrets.DOCKER_USERNAME }} -p "${{ secrets.DOCKER_PASSWORD }}" -d -l
-
-  build-frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '20'
-
-      - name: Check node and npm versions
-        run: npm -v && node -v
-
-      - name: Install dependencies
-        run: cd frontend && npm install
-
-      - name: Build for production
-        run: cd frontend && npm run build
-
-
