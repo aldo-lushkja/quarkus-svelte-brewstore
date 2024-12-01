@@ -18,7 +18,7 @@ services:
       - shared_network
     labels:
       - traefik.enable=true
-      - traefik.http.routers.brewstore-fe.rule=Host(`contabo-1.lushkja.it`) || Host(`contabo-1.aldolushkja.it`) && PathPrefix(`/brewstore`)
+      - traefik.http.routers.brewstore-fe.rule=(Host(`contabo-1.lushkja.it`) || Host(`contabo-1.aldolushkja.it`)) && PathPrefix(`/brewstore`)
       - traefik.http.routers.brewstore-fe.entrypoints=websecure
       - traefik.http.routers.brewstore-fe.tls=true
       - traefik.http.routers.brewstore-fe.tls.certresolver=letsencrypt
