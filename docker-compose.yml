@@ -1,4 +1,3 @@
-version: '2.1'
 services:
   backend:
     image: alushkja/brewstore-backend:0.0.1

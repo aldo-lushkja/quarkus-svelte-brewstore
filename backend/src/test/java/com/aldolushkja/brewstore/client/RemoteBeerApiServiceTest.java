@@ -17,7 +17,7 @@ class RemoteBeerApiServiceTest {
 
     @Test
     void getBeersWithNameAndPageAndPerPageFilters() {
-        final var beers = remoteBeerApiService.getBeersByNameWithPagination();
+        final var beers = remoteBeerApiService.getBeersByNameWithPagination(1,10);
         System.out.println(beers);
         assertNotNull(beers);
     }

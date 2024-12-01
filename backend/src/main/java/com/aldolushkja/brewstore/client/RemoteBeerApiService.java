@@ -12,7 +12,7 @@ import javax.ws.rs.QueryParam;
 public interface RemoteBeerApiService {
 
     @GET
-    JsonNode getBeersByNameWithPagination();
+    JsonNode getBeersByNameWithPagination(@QueryParam("page") int page, @QueryParam("per_page") int perPage);
 
     @GET
     @Path("/random")

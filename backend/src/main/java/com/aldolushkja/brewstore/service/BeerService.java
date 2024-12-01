@@ -24,16 +24,18 @@ public class BeerService {
 
     public String getBeersByName(String name, int page, int perPage) throws JsonProcessingException {
         logger.info("Fetching beers from punk api");
-        var response = remoteBeerApiService.getBeersByNameWithPagination();
+        var response = remoteBeerApiService.getBeersByNameWithPagination(page, perPage);
         if (response != null) {
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
+            var apiResponse = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
+            logger.info("Response from punk api: " + apiResponse);
+            return apiResponse;
         } else {
             return "";
         }
     }
     public String fetchIpaBeers(int page, int perPage) throws JsonProcessingException {
         logger.info("Fetching beers from punk api");
-        var response = remoteBeerApiService.getBeersByNameWithPagination();
+        var response = remoteBeerApiService.getBeersByNameWithPagination(page, perPage);
         if (response != null) {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
         } else {

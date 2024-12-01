@@ -1,106 +1,162 @@
 <script>
-    let search;
-    let isLoading = false;
-    let onError = false;
-    let beers = [];
-    let tags = [];
+    import {onMount, onDestroy} from "svelte";
+    import {writable, derived} from "svelte/store";
+    import {_, locale} from "svelte-i18n";
+
+    let search = '';
+    let isLoading = writable(false);
+    let onError = writable(false);
+    let beers = writable([]);
+    // let tags = [];
     let executionTimeFull;
     let executionTime;
+    let debounceTimer;
 
     const formatter = new Intl.NumberFormat('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
-    const searchBeers = async () => {
-        const BEER_API = `http://localhost:8089/beers/search-by-name/${search}/?page=1&per_page=80`;
-        console.log('Fetching from url: ' + BEER_API)
-        console.log('Using search text: ' + search)
 
-        const startTime = performance.now();
+    const beersList = derived(beers, $beers => {
+        return Array.isArray($beers) ? $beers : [];
+    });
 
-        const response = await fetch(BEER_API);
+    const searchBeers = (searchTerm) => {
+        // Clear any existing timer
+        if (debounceTimer) clearTimeout(debounceTimer);
 
-        executionTimeFull = (performance.now() - startTime) / 1000
-        executionTime = formatter.format(executionTimeFull);
-        if (response.status !== 200) {
-            isLoading = false;
-            onError = true;
-            console.log(
-                "Error calling API, response with status " + response.status
-            );
+        // Only search if term is long enough
+        if (searchTerm.length < 3) {
+            beers.set([]);
             return;
         }
-        beers = await response.json();
 
-        let index;
+        isLoading.set(true);
 
-        for (index = 0; index < beers.length; index++) {
-            tags.push(beers[index].tagline);
-        }
+        // Set a new debounce timer
+        debounceTimer = setTimeout(() => {
+            onError.set(false);
 
-        console.log(new Set(tags))
+            const BEER_API = `http://localhost:8089/beers/search-by-name/${searchTerm}/?page=1&per_page=10`;
+            console.log('Fetching from url: ' + BEER_API);
+            console.log('Using search text: ' + searchTerm);
+
+            const startTime = performance.now();
+
+            fetch(BEER_API)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    executionTimeFull = (performance.now() - startTime) / 1000;
+                    executionTime = formatter.format(executionTimeFull);
+
+                    beers.set(data);
+                    // tags = data.map(beer => beer.tagline);
+                    // console.log(new Set(tags));
+                    isLoading.set(false);
+                })
+                .catch(error => {
+                    console.error("Error fetching beers:", error);
+                    onError.set(true);
+                    isLoading.set(false);
+                });
+        }, 1000); // 500ms delay
+    };
+
+    // Cleanup subscription on component destroy
+    onDestroy(() => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+    });
+
+    const getCountryEmoji = (country) => {
+        const codePoints = country
+            .toUpperCase()
+            .split('')
+            .map(char => 127397 + char.charCodeAt(0));
+        return String.fromCodePoint(...codePoints);
     };
 
 
-    const handleClick = async (e) => {
-        isLoading = true;
-        await new Promise(r => setTimeout(r, 3000));
-        await searchBeers();
-        isLoading = false;
+    const handleClick = () => {
+        searchBeers(search);
     };
 </script>
 
-<div class="container is-fluid is-flex box">
-    <h1 class="is-size-3 ml-2">🍺🥃🍻 BrewStore 🍺🥃🍻</h1>
-    <div class="control">
-        <input
-                type="text"
-                name="search"
-                bind:value={search}
-                class="input is-primary is-rounded is-medium is-loading ml-2"
-                style="width: 20rem"
-                placeholder="Search a beer..."
-        />
+<main>
+    <div class="container is-fluid has-text-centered">
+        <h1 class="title is-2">🌟 Brewery Hall</h1>
+        <div class="field has-addons is-centered" style="width: 300px; margin: 0 auto;">
+            <div class="control is-expanded has-addons-centered">
+                <input
+                        type="text"
+                        name="search"
+                        bind:value={search}
+                        class="input is-primary is-rounded is-small"
+                        placeholder="Cheer me up!"
+                />
+            </div>
+            <div class="control">
+                <button on:click={handleClick} class="button is-primary is-rounded is-small">
+                    Search
+                </button>
+            </div>
+        </div>
     </div>
-    <button on:click={handleClick} class="button is-primary is-rounded ml-2 mt-1"
-    >Search
-    </button
-    >
-</div>
 
-<div class="container is-fluid columns is-variable is-multiline">
-    {#if executionTime}
-        <div class="column is-full"><h2 class="is-size-6 ">{beers.length} risultati in {executionTime} secondi</h2>
+    {#if !$isLoading && !$onError}
+        <div class="container is-fluid columns is-variable is-multiline">
+            {#if executionTime}
+                <div class="column is-full">
+                    <h2 class="sub-title is-size-6">{$beersList.length} results in {executionTime} seconds</h2>
+                </div>
+            {/if}
+
+            {#each $beersList as beer (beer.id)}
+                <div class="column is-one-quarter">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-content has-text-centered">
+                                    <p class="title is-4">{beer.name}</p>
+                                    <p class="subtitle is-6">{beer.breweryType}</p>
+                                    <p>{beer.address1}</p>
+                                    <p>{beer.address2}</p>
+                                    <p>{beer.address3}</p>
+                                    <p>{beer.city}, {beer.stateProvince} {beer.postalCode}</p>
+                                    <p class="sub-title">{beer.country} {getCountryEmoji(beer.country)}</p>
+                                    <p>Longitude: {beer.longitude}</p>
+                                    <p>Latitude: {beer.latitude}</p>
+                                    <p>Phone: {beer.phone}</p>
+                                    <p><a href={beer.websiteUrl} target="_blank">{beer.websiteUrl}</a></p>
+                                    <p>State: {beer.state}</p>
+                                    <p>Street: {beer.street}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {/each}
         </div>
     {/if}
 
-    {#each beers as beer}
-        <div class="column is-one-quarter">
-            <div class="card ">
-                <div class="card-image">
-                    <figure class="image is-square ">
-                        <img src={beer.image_url} alt="Placeholder image"/>
-                    </figure>
-                </div>
-                <div class="card-content">
-                    <div class="media">
-                        <div class="media-content">
-                            <p class="title is-4">{beer.name}</p>
-                            <p class="subtitle is-6">
-                                {#if beer.description.length > 200} {beer.description.substring(200)}...
-                                {:else} {beer.description}  {/if}
-                            </p>
-                        </div>
-                    </div>
 
-                    <div class="content"></div>
-                </div>
-            </div>
-        </div>
-    {/each}
-</div>
+</main>
+{#if $onError}
+    <div class="container is-fluid">
+        <img
+                class="image is-128x128"
+                alt="error occurred"
+                src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F2.bp.blogspot.com%2F-CPO_z4zNSnc%2FWsY667p0JgI%2FAAAAAAAAYRs%2FubTMJD5ToyImbR-o4EiK18gBypYXd0RiwCLcBGAs%2Fs1600%2FMercenary%252BGarage%252BError%252BGIF.gif&f=1&nofb=1"
+                width="300"
+        />
+    </div>
+{/if}
 
-{#if isLoading}
+{#if $isLoading}
     <div id="loading">
         <img
                 alt="is loading"
@@ -110,22 +166,19 @@
     </div>
 {/if}
 
-{#if onError}
-    <div class="container is-fluid">
-        <img
-                class="image is-128x128"
-                alt="error occured"
-                src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2F2.bp.blogspot.com%2F-CPO_z4zNSnc%2FWsY667p0JgI%2FAAAAAAAAYRs%2FubTMJD5ToyImbR-o4EiK18gBypYXd0RiwCLcBGAs%2Fs1600%2FMercenary%252BGarage%252BError%252BGIF.gif&f=1&nofb=1"
-                width="300"
-        />
-    </div>
-{/if}
-
 <style>
-#loading{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    vertical-align: middle;
-}
+    @import url("https://fonts.googleapis.com/css?family=Nunito:400,700");
+
+    main {
+        font-family: "Nunito", sans-serif;
+    }
+
+    #loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        vertical-align: middle;
+    }
+
+
 </style>
