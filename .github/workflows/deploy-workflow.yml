@@ -25,11 +25,7 @@ jobs:
 
       - name: Copy files to remote server
         run: |
-          scp -rv infrastructure ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:${{ secrets.REMOTE_DIR }}/
-
-      - name: Move infrastructure folder to brewstore
-        run: |
-          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'mv ${{ secrets.REMOTE_DIR }}/infrastructure/ ${{ secrets.REMOTE_DIR }}/brewstore/'
+          scp -rv brewstore ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:${{ secrets.REMOTE_DIR }}/
 
       - name: Set execute permissions on bash scripts
         run: |
