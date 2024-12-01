@@ -9,6 +9,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    concurrency: deploy
 
     steps:
       - name: Checkout repository
