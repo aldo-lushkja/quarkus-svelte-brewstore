@@ -1,4 +1,4 @@
-name: Deploy workflow
+name: deploy-workflow
 
 on:
   workflow_run:
